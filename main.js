@@ -6,7 +6,8 @@ let currentTab;
 let browserOpenPromise = puppeteer.launch({
   headless: false,
   defaultViewportnull: null,
-  args: ["--start-maximized"],
+  args: ["--start-fullscreen"],
+  // args: ["--force"]
 });
 // using arrow function
 // .then will envoke the function who ever you have passed in it here we are prining that browser is opened and this process will happen when your promise is completed with out any error.
@@ -32,7 +33,8 @@ browserOpenPromise
     console.log("Opened hackerrank home page");
     let emailTypePromise = currentTab.type(
       "input[name = 'username']",
-      credential[0]
+      credential[0],
+      { delay: 500 }
     );
     // let passwordTypedPromise = currentTab.type("#id_password", password);
     return emailTypePromise;
@@ -41,7 +43,8 @@ browserOpenPromise
     console.log("Email is typed......");
     let passwordIsTypedPromise = currentTab.type(
       "input[type = 'password']",
-      credential[1]
+      credential[1],
+      { delay: 300 }
     );
     return passwordIsTypedPromise;
   })
@@ -95,16 +98,22 @@ browserOpenPromise
     return linkArrPrmoise;
   })
   .then(function (linkArray) {
-    console.log("Links to all function received!!!");
+    console.log("Links to all question received!!!");
+
     // console.log(linkArray);
     // passing linke to the question(linkArray[i]), and index of the link provided(i)
-    for (let i = 0; i < linkArray.length; i++) {
-      let questionWillBeSolvedPromise = questionSolverFun(linkArray[i], i);
-      return questionWillBeSolvedPromise;
+    let questionWillBeSolvedPromise = questionSolverFun(linkArray[0], 0);
+    for (let i = 1; i < linkArray.length; i++) {
+      questionWillBeSolvedPromise = questionWillBeSolvedPromise.then(
+        function () {
+          return questionSolverFun(linkArray[i], i);
+        }
+      );
     }
+    return questionWillBeSolvedPromise;
   })
   .then(function () {
-    console.log("Question is solved!!!");
+    console.log("Questions are solved!!!");
   })
   .catch(function (err) {
     console.log(err);
@@ -159,7 +168,8 @@ function questionSolverFun(url, index) {
         console.log("Selected the cbi box");
         let typeAnswerAtCibPromise = currentTab.type(
           ".custominput",
-          answer[index]
+          answer[index],
+          { delay: 10 }
         );
         return typeAnswerAtCibPromise;
       })
@@ -232,7 +242,7 @@ function questionSolverFun(url, index) {
         return submitButtonPressedPromise;
       })
       .then(function () {
-        console.log("Code is submitted successfully!!!!!!");
+        console.log(`Question ${index + 1} is solved successfully!!!`);
         resolve();
       })
       .catch(function (err) {
