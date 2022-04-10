@@ -1,7 +1,5 @@
 const puppeteer = require("puppeteer");
-const answer = require("./answers");
-const email = "jatinbisht2308@gmail.com";
-const password = "jatin2308";
+let { answer } = require("./answers");
 let currentTab;
 // .launch is used to launch the chromium browser
 let browserOpenPromise = puppeteer.launch({
@@ -96,8 +94,10 @@ browserOpenPromise
     console.log("Links to all function received!!!");
     // console.log(linkArray);
     // passing linke to the question(linkArray[i]), and index of the link provided(i)
-    let questionWillBeSolvedPromise = questionSolverFun(linkArray[0], 0);
-    return questionWillBeSolvedPromise;
+    for (let i = 0; i < linkArray.length; i++) {
+      let questionWillBeSolvedPromise = questionSolverFun(linkArray[i], i);
+      return questionWillBeSolvedPromise;
+    }
   })
   .then(function () {
     console.log("Question is solved!!!");
@@ -141,14 +141,20 @@ function questionSolverFun(url, index) {
         console.log("Page is opened");
         // Steps to solve a particular question
         // 1)- click on custom input box button 🔄
-        let clickOnCibPromise = currentTab.waitAndClick("input[type='checkbox']");
+        let clickOnCibPromise = waitAndClick("input[type='checkbox']");
         return clickOnCibPromise;
       })
       .then(function () {
-        // 2)- type the code from answers in CIB🔄
+        //select the box where code will be typed
         console.log("Clicked on custom input box button!!!!");
+        let waitForTextBoxPromise = currentTab.waitForSelector(".custominput");
+        return waitForTextBoxPromise;
+      })
+      .then(function () {
+        // 2)- type the code from answers in CIB🔄
+        console.log("Selected the cbi box");
         let typeAnswerAtCibPromise = currentTab.type(
-          ".input.text-area.custominput.auto-width",
+          ".custominput",
           answer[index]
         );
         return typeAnswerAtCibPromise;
@@ -207,7 +213,14 @@ function questionSolverFun(url, index) {
         return pressControlVpromise;
       })
       .then(function () {
+        // releasing the ctrl button because it is pressed from late 2 steps i.e ctrl+A and ctrl+x
         console.log("Code is pasted successfuly in the editor!!!!!");
+        // down refers to releasing the ctrl button
+        let releaseControlpromise = currentTab.keyboard.up("Control");
+        return releaseControlpromise;
+      })
+      .then(function () {
+        console.log("Ctrl is released succesfully!!!!");
         // 8)- Press the submit button
         let submitButtonPressedPromise = currentTab.click(
           ".ui-btn.ui-btn-normal.ui-btn-secondary.pull-right.msR.hr-monaco-compile.hr-monaco__run-code.ui-btn-styled"
@@ -219,7 +232,7 @@ function questionSolverFun(url, index) {
         resolve();
       })
       .catch(function (err) {
-        console.log(err);
+        reject(err);
       });
   });
   return solverPromise;
