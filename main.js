@@ -66,6 +66,36 @@ browserOpenPromise
   })
   .then(function () {
     console.log("Congrats Algo btn clicked!!!!!!!");
+    // same here we have to wait and then click the question link.
+    let getAllQuesLinkPromise = currentTab.waitForSelector(
+      ".js-track-click.challenge-list-item"
+    );
+    return getAllQuesLinkPromise;
+  })
+  .then(function () {
+    function getAllQuesLink() {
+      // her document refers to the html and querySelectorAll refers to select all the html in that particular array of selcetors.
+      // ye saari html lekr aajaega array ki form ma
+      let allQuestionArray = document.querySelectorAll(
+        ".js-track-click.challenge-list-item"
+      );
+      // traverse through the whole array of questions and extract the link of a particular question at specific index
+      let questionLinkArray = [];
+      for (let index = 0; index < allQuestionArray.length; index++) {
+        // 📓 Returns element's first attribute(link) whose qualified name is qualifiedName, and null if there is no such attribute otherwise.
+        questionLinkArray.push(allQuestionArray[index].getAttribute("href"));
+      }
+      // returning the linkArray
+      return questionLinkArray;
+    }
+    // .evaluate() takes a fiunction and executes it
+    let linkArrPrmoise = currentTab.evaluate(getAllQuesLink);
+    return linkArrPrmoise;
+  })
+  .then(function(linkArray)
+  {
+    console.log("Links to all function received!!!"); 
+    console.log(linkArray);
   })
   .catch(function (err) {
     console.log(err);
@@ -76,19 +106,21 @@ function waitAndClick(algoBtnCss) {
   let algoClickPromise = new Promise(function (resolve, reject) {
     // waitForselector() is a function which will wait for the selector until the page gets load.
     let waitForCss = currentTab.waitForSelector(algoBtnCss);
-    waitForCss.then(function () {
-      //  waiting is done now we have to click on the algoBTN
-      console.log("Algo button is found");
-      let clickedPromise = currentTab.click(algoBtnCss);
-      clickedPromise.then(function () {
+    waitForCss
+      .then(function () {
+        //  waiting is done now we have to click on the algoBTN
+        console.log("Algo button is found");
+        let clickedPromise = currentTab.click(algoBtnCss);
+        return clickedPromise;
+      })
+      .then(function () {
         console.log("Successfully clicked!!!!");
         resolve();
       })
-      clickedPromise.catch(function (err) {
+      .catch(function (err) {
         console.log(err);
         reject();
-      })
-    });
+      });
   });
   return algoClickPromise;
 }
