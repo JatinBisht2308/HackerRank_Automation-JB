@@ -1,5 +1,6 @@
 const puppeteer = require("puppeteer");
 let { answer } = require("./answers");
+let { credential } = require("./seceret");
 let currentTab;
 // .launch is used to launch the chromium browser
 let browserOpenPromise = puppeteer.launch({
@@ -29,7 +30,10 @@ browserOpenPromise
   })
   .then(function () {
     console.log("Opened hackerrank home page");
-    let emailTypePromise = currentTab.type("input[name = 'username']", email);
+    let emailTypePromise = currentTab.type(
+      "input[name = 'username']",
+      credential[0]
+    );
     // let passwordTypedPromise = currentTab.type("#id_password", password);
     return emailTypePromise;
   })
@@ -37,7 +41,7 @@ browserOpenPromise
     console.log("Email is typed......");
     let passwordIsTypedPromise = currentTab.type(
       "input[type = 'password']",
-      password
+      credential[1]
     );
     return passwordIsTypedPromise;
   })
