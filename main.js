@@ -1,5 +1,5 @@
 const puppeteer = require("puppeteer");
-
+const answer = require("./answers");
 const email = "jatinbisht2308@gmail.com";
 const password = "jatin2308";
 let currentTab;
@@ -92,10 +92,15 @@ browserOpenPromise
     let linkArrPrmoise = currentTab.evaluate(getAllQuesLink);
     return linkArrPrmoise;
   })
-  .then(function(linkArray)
-  {
-    console.log("Links to all function received!!!"); 
-    console.log(linkArray);
+  .then(function (linkArray) {
+    console.log("Links to all function received!!!");
+    // console.log(linkArray);
+    // passing linke to the question(linkArray[i]), and index of the link provided(i)
+    let questionWillBeSolvedPromise = questionSolverFun(linkArray[0], 0);
+    return questionWillBeSolvedPromise;
+  })
+  .then(function () {
+    console.log("Question is solved!!!");
   })
   .catch(function (err) {
     console.log(err);
@@ -123,4 +128,99 @@ function waitAndClick(algoBtnCss) {
       });
   });
   return algoClickPromise;
+}
+
+// Question Solver Function Defination
+function questionSolverFun(url, index) {
+  let solverPromise = new Promise(function (resolve, reject) {
+    let fullLink = "https://hackerrank.com" + url;
+    // console.log(fullLink);
+    let gotoOpenQuestionPage = currentTab.goto(fullLink);
+    gotoOpenQuestionPage
+      .then(function () {
+        console.log("Page is opened");
+        // Steps to solve a particular question
+        // 1)- click on custom input box button 🔄
+        let clickOnCibPromise = currentTab.waitAndClick("input[type='checkbox']");
+        return clickOnCibPromise;
+      })
+      .then(function () {
+        // 2)- type the code from answers in CIB🔄
+        console.log("Clicked on custom input box button!!!!");
+        let typeAnswerAtCibPromise = currentTab.type(
+          ".input.text-area.custominput.auto-width",
+          answer[index]
+        );
+        return typeAnswerAtCibPromise;
+      })
+      .then(function () {
+        // 3)- press ctrl at CIB🔄
+        console.log("Code is typed successfulyyy!!!!!");
+        // down refers to pressing down the ctrl button
+        let pressControlpromise = currentTab.keyboard.down("Control");
+        return pressControlpromise;
+      })
+      .then(function () {
+        // 3.2)- ctrl+A from CIB🔄
+        console.log("Ctrl is pressed");
+        let pressControlApromise = currentTab.keyboard.press("a");
+        return pressControlApromise;
+      })
+      .then(function () {
+        console.log("Ctrl+A pressed successfully");
+        // 4)- ctrl + X ko press kro(here only x because we have already pressed the ctrl before pressing the A so it is still pressed now so we only have to make promise for pressing the x which is similar to ctrl+x)
+        let pressControlXpromise = currentTab.keyboard.press("x");
+        return pressControlXpromise;
+      })
+      .then(function () {
+        // releasing the ctrl button because it is pressed from late 2 steps i.e ctrl+A and ctrl+x
+        console.log("Ctrl+X pressed succesfully");
+        // down refers to releasing the ctrl button
+        let releaseControlpromise = currentTab.keyboard.up("Control");
+        return releaseControlpromise;
+      })
+      .then(function () {
+        console.log("Ctrl is released successfully");
+        // 5)- Select the editor
+        let editorIsSelectedPromise = currentTab.click(
+          ".monaco-editor.no-user-select.vs"
+        );
+        return editorIsSelectedPromise;
+      })
+      .then(function () {
+        // 6)- ctrl+a in the editor
+        // 6.1)- down the ctrl
+        console.log("Editor is selected successfully!!!!");
+        let pressControlpromise = currentTab.keyboard.down("Control");
+        return pressControlpromise;
+      })
+      .then(function () {
+        // 6.2)- ctrl+A in editor🔄
+        console.log("Ctrl is pressed");
+        let pressControlApromise = currentTab.keyboard.press("a");
+        return pressControlApromise;
+      })
+      .then(function () {
+        console.log("Ctrl+A pressed successfully");
+        // 7)- ctrl+v to copy the code from the cib in editor
+        let pressControlVpromise = currentTab.keyboard.press("v");
+        return pressControlVpromise;
+      })
+      .then(function () {
+        console.log("Code is pasted successfuly in the editor!!!!!");
+        // 8)- Press the submit button
+        let submitButtonPressedPromise = currentTab.click(
+          ".ui-btn.ui-btn-normal.ui-btn-secondary.pull-right.msR.hr-monaco-compile.hr-monaco__run-code.ui-btn-styled"
+        );
+        return submitButtonPressedPromise;
+      })
+      .then(function () {
+        console.log("Code is submitted successfully!!!!!!");
+        resolve();
+      })
+      .catch(function (err) {
+        console.log(err);
+      });
+  });
+  return solverPromise;
 }
