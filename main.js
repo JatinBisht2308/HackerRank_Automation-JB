@@ -1,11 +1,12 @@
 const puppeteer = require("puppeteer");
-let { answer } = require("./answers");
+const { answer } = require("./answers");
+console.log(answer);
 let { credential } = require("./seceret");
 let currentTab;
 // .launch is used to launch the chromium browser
 let browserOpenPromise = puppeteer.launch({
   headless: false,
-  defaultViewportnull: null,
+  defaultViewport: false,
   args: ["--start-fullscreen"],
   // args: ["--force"]
 });
@@ -34,7 +35,7 @@ browserOpenPromise
     let emailTypePromise = currentTab.type(
       "input[name = 'username']",
       credential[0],
-      { delay: 500 }
+      { delay: 100 }
     );
     // let passwordTypedPromise = currentTab.type("#id_password", password);
     return emailTypePromise;
@@ -57,6 +58,9 @@ browserOpenPromise
   })
   .then(function () {
     console.log("Successfully signed in.......");
+    // setTimeout(function () {
+    //   console.log("Delay button");
+    // }, 2500);
   })
   .then(function () {
     // Click in the algorithm button(because puppet is not waiting for the page to be laoded so it is not able to find the selector in the not loaded html while the selector is inside the loaded html.)
@@ -64,22 +68,20 @@ browserOpenPromise
     //   "div[data-automation='algorithms']"
     // );
     // 📓📓 now we are making a function which will wait and then click on the selector which we have passed in it
-    let algoBtnClickedPromise = waitAndClick(
-      "div[data-automation='algorithms']"
-    );
-    return algoBtnClickedPromise;
+    let javaBtnClickedPromise = waitAndClick("a[class='ui-btn ui-btn-normal ui-btn-large ui-btn-primary ui-btn-link ui-btn-styled']");
+    return javaBtnClickedPromise;
   })
   .then(function () {
-    console.log("Congrats Algo btn clicked!!!!!!!");
+    console.log("Congrats Java btn clicked!!!!!!!");
     // same here we have to wait and then click the question link.
-    let getAllQuesLinkPromise = currentTab.waitForSelector(
-      ".js-track-click.challenge-list-item"
+    let getTopQuesLinkPromise = currentTab.waitForSelector(
+      ".ui-btn.ui-btn-normal.primary-cta.ui-btn-primary.ui-btn-styled"
     );
-    return getAllQuesLinkPromise;
+    return getTopQuesLinkPromise;
   })
   .then(function () {
-    function getAllQuesLink() {
-      // her document refers to the html and querySelectorAll refers to select all the html in that particular array of selcetors.
+    function getTopQuesLink() {
+      // here document refers to the html and querySelectorAll refers to select all the html in that particular array of selcetors.
       // ye saari html lekr aajaega array ki form ma
       let allQuestionArray = document.querySelectorAll(
         ".js-track-click.challenge-list-item"
@@ -94,16 +96,16 @@ browserOpenPromise
       return questionLinkArray;
     }
     // .evaluate() takes a fiunction and executes it
-    let linkArrPrmoise = currentTab.evaluate(getAllQuesLink);
+    let linkArrPrmoise = currentTab.evaluate(getTopQuesLink);
     return linkArrPrmoise;
   })
   .then(function (linkArray) {
     console.log("Links to all question received!!!");
 
-    // console.log(linkArray);
+    console.log(linkArray);
     // passing linke to the question(linkArray[i]), and index of the link provided(i)
     let questionWillBeSolvedPromise = questionSolverFun(linkArray[0], 0);
-    for (let i = 1; i < linkArray.length; i++) {
+    for (let i = 1; i < answer.length; i++) {
       questionWillBeSolvedPromise = questionWillBeSolvedPromise.then(
         function () {
           return questionSolverFun(linkArray[i], i);
@@ -119,16 +121,16 @@ browserOpenPromise
     console.log(err);
   });
 
-function waitAndClick(algoBtnCss) {
+function waitAndClick(javaBtnCss) {
   // making a new promise here-> this function is not involve in chaining so we have to make a personal/local promise for it
-  let algoClickPromise = new Promise(function (resolve, reject) {
+  let javaClickPromise = new Promise(function (resolve, reject) {
     // waitForselector() is a function which will wait for the selector until the page gets load.
-    let waitForCss = currentTab.waitForSelector(algoBtnCss);
+    let waitForCss = currentTab.waitForSelector(javaBtnCss);
     waitForCss
       .then(function () {
         //  waiting is done now we have to click on the algoBTN
-        console.log("Algo button is found");
-        let clickedPromise = currentTab.click(algoBtnCss);
+        console.log("Java button is found");
+        let clickedPromise = currentTab.click(javaBtnCss);
         return clickedPromise;
       })
       .then(function () {
@@ -140,7 +142,7 @@ function waitAndClick(algoBtnCss) {
         reject();
       });
   });
-  return algoClickPromise;
+  return javaClickPromise;
 }
 
 // Question Solver Function Defination
@@ -235,11 +237,25 @@ function questionSolverFun(url, index) {
       })
       .then(function () {
         console.log("Ctrl is released succesfully!!!!");
-        // 8)- Press the submit button
+        // 8.1)- Press the submit button
         let submitButtonPressedPromise = currentTab.click(
           ".ui-btn.ui-btn-normal.ui-btn-secondary.pull-right.msR.hr-monaco-compile.hr-monaco__run-code.ui-btn-styled"
         );
+        // use set timout
+        setTimeout(function () {
+          console.log("Delay button");
+        }, 2500);
         return submitButtonPressedPromise;
+      })
+      .then(function () {
+        // 8.2)- press submit button again
+        let submitButtonPressedAgainPromise = currentTab.click(
+          ".ui-btn.ui-btn-normal.ui-btn-primary.pull-right.hr-monaco-submit.ui-btn-styled"
+        );
+        setTimeout(function () {
+          console.log("Delay button");
+        }, 2500);
+        return submitButtonPressedAgainPromise;
       })
       .then(function () {
         console.log(`Question ${index + 1} is solved successfully!!!`);
